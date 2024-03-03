@@ -1,5 +1,8 @@
 import { ChangeEvent, KeyboardEvent, useState } from "react";
 import { FilterValueType } from "../App";
+import { AddItemForm } from "../AddItemForm";
+import { EditableSpan } from "../EditableSpan";
+
 
 type CaseType = {
     id: string;
@@ -9,42 +12,19 @@ type CaseType = {
     changeFilter: (value: FilterValueType, todolistId: string) => void;
     addTask: (title: string, todolistId: string)  => void;
     changeTypeStatus: (taskId: string, status: boolean, todolistId: string) => void;
+    changeTaskName: (Id: string, newTitle: string, todolistId: string) => void;
     filter: FilterValueType;
     removeTodolist: (todolistId: string) => void;
+    changeTodolistTitle: (todolistId: string, newTitle: string) => void;
 }
 
-type CaseName = {
+export type CaseName = {
     id: string;
     name: string;
     status: boolean;
 }
 
 export const Todolist = (props: CaseType) => {
-
-    const [newTaskTitle, setNewTaskTitle] = useState("");
-    const [error, setError] = useState<string | null>(null);
-
-    const onNewTitleChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
-      setNewTaskTitle(e.currentTarget.value)
-    }
-
-    const onKeyPressHandler = (e: KeyboardEvent<HTMLInputElement>) => {
-      setError(null);
-      if (e.charCode === 13) {
-        props.addTask(newTaskTitle, props.id);
-        setNewTaskTitle("");
-      }
-    }
-
-    const addTask = () => {
-      if (newTaskTitle.trim() !== "") {
-        props.addTask(newTaskTitle.trim(), props.id);
-        setNewTaskTitle("");
-      }
-      else {
-        setError ("Поле обязательно для заполнения")
-      }
-    }
 
     const onAllClickHandler = () => props.changeFilter('all', props.id);
     const onActiveClickHandler = () => props.changeFilter('active', props.id);
@@ -53,35 +33,39 @@ export const Todolist = (props: CaseType) => {
       props.removeTodolist(props.id);
     }
 
-    return(
-      
-      <div>
-      <h1>{props.title}<button onClick={removeTodolist}>x</button></h1>
-      <div>
-        <input value={newTaskTitle} 
-          onChange={onNewTitleChangeHandler}
-          onKeyPress={onKeyPressHandler}
-          className={error ? "error" : ""}
-        />
-        <button onClick={addTask}>+</button>
-        {error && <div className="error-message">*Поле обязательно для заполнения</div>}
-      </div>
+    const changeTodolistTitle = (newTitle: string) => {
+      props.changeTodolistTitle(props.id, newTitle);
+    }
 
+    const addTask = (title: string) => {
+      props.addTask(title, props.id);
+    }
+
+    return(
+      <div>
+      <h1> <EditableSpan name={props.title} onChange={changeTodolistTitle} editMode={false} />
+        <button onClick={removeTodolist}>x</button>
+      </h1>
+      <AddItemForm addItem={addTask}/>
       <ul>
         {
           props.tasks.map ((t) => {
 
             const onRemoveHandler = () => {props.removeTask(t.id, props.id)}
-            const onChangeHandler = (e: ChangeEvent<HTMLInputElement>) => {
+            const onChangeStatusHandler = (e: ChangeEvent<HTMLInputElement>) => {
               props.changeTypeStatus (t.id, e.currentTarget.checked, props.id)
+            }
+
+            const onChangeNameHandler = (newValue: string) => {
+              props.changeTaskName (t.id, newValue, props.id)
             }
 
 
             return <li className={t.status ? "status" : ""}>
               <input type = 'checkbox'
-                onChange={onChangeHandler}
+                onChange={onChangeStatusHandler}
                 checked = {t.status}/>
-              <span>{t.name}</span>
+              <EditableSpan name={t.name} onChange={onChangeNameHandler} editMode={false} />
               <button onClick={onRemoveHandler}>x</button>
             </li>
           })
@@ -98,4 +82,8 @@ export const Todolist = (props: CaseType) => {
       </div>
     </div>
     )
+
   }
+
+
+ 
